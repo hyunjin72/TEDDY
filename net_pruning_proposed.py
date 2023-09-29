@@ -99,21 +99,13 @@ class GIN(torch.nn.Module):
         pruned_values = pruned_values[mask]
         adj_pruned = SparseTensor.from_edge_index(edge_index, pruned_values, 
                                         sparse_sizes=(self.args.n_nodes, self.args.n_nodes))
-        if compute_macs:
-            macs = gin_macs(self, adj_pruned, self.in_channels, self.hidden_channels, 
-                            self.out_channels, self.num_layers, self.args)
-        else:
-            macs = None
             
-        ts = time.time()
         xs = []
         for conv in self.convs:
             x = conv(x, adj_pruned)
             x = F.relu(x)
             xs.append(x)
         x = (self.mlp(xs[0]) + xs[1]) / 2
-        tt = time.time()
-        duration = tt - ts
-        return x, macs, duration
+        return x
 
 

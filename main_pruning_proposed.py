@@ -180,9 +180,9 @@ def run_fix_mask(args, seed, adj_percent, wei_percent, prev_pruned_indices=None,
         adj_spar = 100
         wei_spar = 100
         output_ori = best_output.clone()
-        
+        os.makedirs(args.best_model_dir, exist_ok=True)
         torch.save(best_model, os.path.join(args.best_model_dir, 
-                        f'{args.dataset}_{args.net}_{args.type}_best_model.pt'))
+                        f'{args.dataset}_{args.net}_best_model.pt'))
 
     return best_val_acc['test_acc'], adj_spar, wei_spar, pruned_indices, \
             edge_scores, output_ori
