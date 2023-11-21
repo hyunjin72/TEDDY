@@ -12,19 +12,23 @@ import torch_sparse
 from torch_sparse import SparseTensor, matmul
 import math, pdb, os, pickle
 import subprocess, time
+import logging
+import math
+from typing import Iterator
+from dataclasses import dataclass
+
+import torch.optim as optim
+from torch.nn import Parameter
+from torch.optim import Adagrad, AdamW, Optimizer
+from torch.optim.lr_scheduler import ReduceLROnPlateau
+
+# from torch_geometric.graphgym.optim import SchedulerConfig
+# import torch_geometric.graphgym.register as register
+import tqdm, pdb
+from torch_geometric.datasets import GNNBenchmarkDataset
+import torch_geometric.transforms as T
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
-def entropy(prob):
-    """
-    Also known as Shanon Entropy
-    Reference: https://en.wikipedia.org/wiki/Entropy_(information_theory)
-    """
-    # unique, count = np.unique(Y, return_counts=True, axis=0)
-    # prob = count/len(Y)
-    en = torch.sum((-1)*prob*torch.log2(prob))
-    return en
-
 
 def glorot(tensor):
     if tensor is not None:
@@ -75,7 +79,7 @@ def load_data(dataset_str):
     names = ['x', 'y', 'tx', 'ty', 'allx', 'ally', 'graph']
     objects = []
     for i in range(len(names)):
-        with open("dataset/ind.{}.{}".format(dataset_str, names[i]), 'rb') as f:
+        with open("../dataset/ind.{}.{}".format(dataset_str, names[i]), 'rb') as f:
         # with open("./../../GCNII/data/ind.{}.{}".format(dataset_str, names[i]), 'rb') as f:
             if sys.version_info > (3, 0):
                 objects.append(pkl.load(f, encoding='latin1'))
@@ -83,7 +87,7 @@ def load_data(dataset_str):
                 objects.append(pkl.load(f))
 
     x, y, tx, ty, allx, ally, graph = tuple(objects)
-    test_idx_reorder = parse_index_file("dataset/ind.{}.test.index".format(dataset_str))
+    test_idx_reorder = parse_index_file("../dataset/ind.{}.test.index".format(dataset_str))
     test_idx_range = np.sort(test_idx_reorder)
 
     if dataset_str == 'citeseer':
@@ -236,14 +240,14 @@ def load_adj_raw(dataset_str):
     names = ['x', 'y', 'tx', 'ty', 'allx', 'ally', 'graph']
     objects = []
     for i in range(len(names)):
-        with open("dataset/ind.{}.{}".format(dataset_str, names[i]), 'rb') as f:
+        with open("../dataset/ind.{}.{}".format(dataset_str, names[i]), 'rb') as f:
             if sys.version_info > (3, 0):
                 objects.append(pkl.load(f, encoding='latin1'))
             else:
                 objects.append(pkl.load(f))
 
     x, y, tx, ty, allx, ally, graph = tuple(objects)
-    test_idx_reorder = parse_index_file("dataset/ind.{}.test.index".format(dataset_str))
+    test_idx_reorder = parse_index_file("../dataset/ind.{}.test.index".format(dataset_str))
     test_idx_range = np.sort(test_idx_reorder)
 
     if dataset_str == 'citeseer':
@@ -259,3 +263,26 @@ def load_adj_raw(dataset_str):
 
     adj_raw = nx.adjacency_matrix(nx.from_dict_of_lists(graph))
     return adj_raw
+
+
+def get_cosine_schedule_with_warmup(
+        optimizer: Optimizer, num_warmup_steps: int, num_training_steps: int,
+        num_cycles: float = 0.5, last_epoch: int = -1):
+
+    def lr_lambda(current_step):
+        if current_step < num_warmup_steps:
+            return max(1e-6, float(current_step) / float(max(1, num_warmup_steps)))
+        progress = float(current_step - num_warmup_steps) / float(max(1, num_training_steps - num_warmup_steps))
+        return max(0.0, 0.5 * (1.0 + math.cos(math.pi * float(num_cycles) * 2.0 * progress)))
+
+    return optim.lr_scheduler.LambdaLR(optimizer, lr_lambda, last_epoch)
+
+
+def pre_transform_in_memory(dataset, transform_func, show_progress=False):
+    if transform_func is None:
+        return dataset
+
+    data = transform_func(data)
+    return data
+
+
