@@ -94,7 +94,7 @@ def run_fix_mask(args, seed, adj_percent, wei_percent, prev_pruned_indices=None,
     if not init:
         if cnt > 0: ## make sure that pruned edges in previous simulations not be revived
             edge_score[prev_pruned_indices] = 0
-        pruned_values, pruned_indices, adj_spar = prune_adj(edge_index, edge_score, adj_percent)
+        pruned_values, pruned_indices, adj_spar = prune_adj(edge_index, edge_score.clone(), adj_percent)
     
     # 4. Start training
     best_output = None
@@ -117,7 +117,7 @@ def run_fix_mask(args, seed, adj_percent, wei_percent, prev_pruned_indices=None,
             loss_tot.backward()
 
         optimizer.step()
-        if not init:
+        if not init and args.pruning_percent_wei > 0:
             param_vec = []
             for name, param in model.named_parameters():
                 param_vec.append(param.data.view(-1))
@@ -142,7 +142,8 @@ def run_fix_mask(args, seed, adj_percent, wei_percent, prev_pruned_indices=None,
                 # L0 projection (removing smallest h entries)
                 param.data = param.data * mask.data
             wei_spar = 100.0 * (total_params - n_pruning) / total_params
-            
+        else:
+            wei_spar = 100.
         # 5. Per-step validation
         model.eval()
         with torch.no_grad():
