@@ -11,11 +11,7 @@
 Source code of our paper, [TEDDY: Trimming Edges with Degree-based Graph Discrimination strategY](https://arxiv.org/abs/2402.01261), accepted at ICLR 2024.
 
 <img src="figs/overall_framework.png" width="900"/>
-=======
-# TEDDY: Trimming Edges with Degree-based Graph Discrimination strategY
----
-Source code of our paper, "TEDDY: Trimming Edges with Degree-based Graph Discrimination strategY", accepted at ICLR 2024.
->>>>>>> ac2f6cd8f472a97c647c540060853ba0b4abcad8
+
 
 ## Running the Code
 - Create a virtual environment
