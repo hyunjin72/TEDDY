@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 <div align="center">  
 
 # TEDDY: Trimming Edges with Degree-based Graph Discrimination strategY
