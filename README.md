@@ -1,3 +1,17 @@
+<div align="center">  
+
+# TEDDY: Trimming Edges with Degree-based Graph Discrimination strategY
+
+[![Paper](https://img.shields.io/badge/cs.LG-arXiv%3A2402.01261-b31b1b.svg?logo=arxiv&color=b31b1b)](https://arxiv.org/abs/2402.01261)
+[![Conference](https://img.shields.io/badge/ICLR-2024-74c92e.svg?color=74c92e
+)](https://iclr.cc/) 
+
+</div>
+
+Source code of our paper, [TEDDY: Trimming Edges with Degree-based Graph Discrimination strategY](https://arxiv.org/abs/2402.01261), accepted at ICLR 2024.
+
+<img src="figs/overall_framework.png" width="900"/>
+
 ## Running the Code
 - Create a virtual environment
 ```
